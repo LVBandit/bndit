@@ -769,14 +769,18 @@ function lyricActivate(){
   lyrLive = [];   // fresh screen: nothing counts as live
   lyrLastLine = null;   // and no continuation parent survives a track switch
   const title = tracks[ti].title;
-  // priority: stored LRC > runtime LRC > tap calibration > even musical grid
+  lyricSyncLoad();   // load any saved ±nudge for this track (was dead before — never called)
+  // priority: tap calibration (full length) > embedded/stored LRC > even musical grid
+  const taps = JSON.parse(localStorage.getItem(lyrTapsKey()) || 'null');
   const lrc = LYR_LRC[title] || JSON.parse(localStorage.getItem('lyrlrc:' + title) || 'null') || null;
   if (lrc && lrc.length) {
     // honor persisted [r] markup over LRC text when the line count matches the hand pool
     const pool = LYRICS[title] || null;
+    // a full-length tap pass beats the embedded stamps — hand sync wins; partial taps lose to LRC
+    const handTimes = (taps && Array.isArray(taps) && taps.length === lrc.length) ? taps : null;
     const lines = lrc.map((e, i) => ({
       text: (pool && pool.length === lrc.length) ? pool[i] : e.text,
-      base: e.t,
+      base: (handTimes && typeof handTimes[i] === 'number') ? handTimes[i] : e.t,
       ratio: (i + 0.5) / lrc.length,
       fired: false
     }));
@@ -784,7 +788,6 @@ function lyricActivate(){
     return;
   }
   const pool = LYRICS[title] || null;
-  const taps = JSON.parse(localStorage.getItem(lyrTapsKey()) || 'null');
   lyr.lines = pool ? pool.map((text, i) => ({
     text,
     base: (taps && taps.length === pool.length) ? taps[i] : null,
@@ -803,6 +806,19 @@ function tapEnter(){
 }
 function tapExit(){
   tapMode = false;
+  // a completed pass: copy the exact timestamps out so they can be baked into the page for every visitor
+  const saved = JSON.parse(localStorage.getItem(lyrTapsKey()) || '[]').filter(v => typeof v === 'number');
+  if (saved.length && saved.length === lyr.lines.length) {
+    let hudMsg = 'sync locked ✓ ' + saved.length + ' lines — copied, paste it into chat';
+    try { navigator.clipboard.writeText(JSON.stringify(saved.map(v => +v.toFixed(2)))); } catch { hudMsg += ' (clipboard blocked — screenshot the HUD instead)'; }
+    if (tapHud) {
+      tapHud.textContent = hudMsg;
+      const h = tapHud; tapHud = null;
+      setTimeout(() => h.remove(), 8000);
+    }
+    lyricActivate();
+    return;
+  }
   if (tapHud) { tapHud.remove(); tapHud = null; }
   lyricActivate();
 }
@@ -1063,6 +1079,7 @@ function lyricSyncLoad(){
   lyrNudgeVal = parseFloat(localStorage.getItem('lyrnudge:' + tracks[ti].title)) || 0;
 }
 function lyricTick(t){
+  if (tapMode) return;   // calibrating: the tapper is the clock, don't spawn against the old (wrong) stamps
   if (!lyr.lines.length || !track.duration) return;
   const N = lyr.lines.length;
   const stride = (track.duration - 4.5) / Math.max(1, N - 1);
