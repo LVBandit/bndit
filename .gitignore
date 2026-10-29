@@ -1,0 +1,5 @@
+server.js
+views.json
+data.json
+.*
+!/.gitignore
