@@ -117,7 +117,7 @@
     if (!wrapper) return;
 
     var strings = [
-      'Click The Link Icon For My Custom Webpage...',
+      'Status can't be purchased.',
       'print("Hello, Larp!")...'
     ];
 
