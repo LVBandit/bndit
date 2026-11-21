@@ -1,0 +1,56 @@
+/* Added for the offline clone: profile view counter */
+
+.profile-views {
+  position: absolute;
+  bottom: 12px;
+  left: 15px;
+  z-index: 4;
+  pointer-events: auto;
+  color: #fff;
+}
+
+.profile-views-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 14px;
+  font-weight: 550;
+  line-height: 1;
+  color: #fff;
+  opacity: 0.78;
+  cursor: default;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.profile-views-value svg {
+  width: 1em;
+  height: 1em;
+  flex: 0 0 auto;
+}
+
+#view-count {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.2px;
+}
+
+@keyframes profile-views-bump {
+  0% { opacity: 0.78; transform: translateY(0) scale(1); }
+  30% { opacity: 1; transform: translateY(-1px) scale(1.06); }
+  100% { opacity: 0.78; transform: translateY(0) scale(1); }
+}
+
+.profile-views-bump {
+  animation: profile-views-bump 0.9s ease-out;
+}
+
+@media (max-width: 560px) {
+  .profile-views {
+    bottom: 8px;
+    left: 10px;
+  }
+
+  .profile-views-value {
+    font-size: 12px;
+  }
+}
