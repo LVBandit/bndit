@@ -117,7 +117,7 @@
     if (!wrapper) return;
 
     var strings = [
-      'Status can't be purchased.',
+      'Status can\'t be purchased.',
       'print("Hello, Larp!")...'
     ];
 
